@@ -29,7 +29,6 @@ class RevervasList extends _$RevervasList {
         DateTime fechaB = DateTime.parse(b['date']);
         return fechaB.compareTo(fechaA); // Cambio de fechaB.compareTo(fechaA)
       });
-
       return list;
     } else {
       return [];
@@ -39,6 +38,7 @@ class RevervasList extends _$RevervasList {
   bool addReserva() {
     List<dynamic> listSaved = getList();
     var cancha = ref.watch(nombreCanchaProvider);
+    var cloud = ref.watch(weatherProvider);
     var fechaReserva = dateController
         .text; // Suponiendo que esto devuelve la fecha en formato de cadena (e.g., "2024-03-21")
 
@@ -52,17 +52,30 @@ class RevervasList extends _$RevervasList {
         .length;
 
     if (reservasParaCancha < 3) {
-      // Crear el objeto JSON
-      Map<String, dynamic> create = {
-        "date": fechaReserva,
-        "username": username.text,
-        "cancha": cancha,
-      };
+      print(fechaReserva);
+      print(username.text);
+      print(cancha);
+      if (fechaReserva == '' || username.text == '' || cancha == '') {
+        // Crear el objeto JSON
+        print('Los campos son obligatorios');
 
-      listSaved.add(create);
-      state = listSaved;
-      _prefs.reservaList = jsonEncode(state);
-      return true; // Guardar la lista de reservas como cadena JSON
+        return false; // Guardar la lista de reservas como cadena JSON
+      } else {
+        Map<String, dynamic> create = {
+          "date": fechaReserva,
+          "username": username.text,
+          "cancha": cancha,
+          "cloud": cloud
+        };
+
+        listSaved.add(create);
+        state = listSaved;
+        inspect(state);
+        _prefs.reservaList = jsonEncode(state);
+        dateController.text = '';
+        username.text = '';
+        return true;
+      }
     } else {
       // Ya se ha alcanzado el límite de reservas para esta cancha en este día
       print('No se puede agregar más reservas para esta cancha en esta fecha');
@@ -80,11 +93,21 @@ class CanchaList extends _$CanchaList {
 @Riverpod(keepAlive: true)
 class NombreCancha extends _$NombreCancha {
   @override
-  String build() => "Cancha B";
+  String build() => "Cancha A";
 
   setNombre(String code) async {
     state = code;
     print("ESTADO: $state");
-    return state;
+  }
+}
+
+@Riverpod(keepAlive: true)
+class Weather extends _$Weather {
+  @override
+  String build() => "";
+
+  setWeather(String code) async {
+    state = code;
+    print("ESTADO: $state");
   }
 }

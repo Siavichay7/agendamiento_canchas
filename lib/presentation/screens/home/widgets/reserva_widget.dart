@@ -33,42 +33,18 @@ class ReservaWidget extends ConsumerWidget {
               children: [
                 Text(reserva!['date']),
                 Text(reserva!["username"]),
-                Row(
-                  children: [
-                    Icon(FontAwesomeIcons.cloudRain),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text("13%"),
-                    )
-                  ],
+                SizedBox(
+                  height: 5,
                 ),
+                Icon(FontAwesomeIcons.cloudRain),
               ],
             ),
-            trailing: Column(
-              children: [
-                IconButton(
-                    onPressed: () {
-                      QuickAlert.show(
-                          context: context,
-                          type: QuickAlertType.confirm,
-                          title: 'Eliminar',
-                          text: 'Deseas eliminar la reserva?',
-                          confirmBtnText: 'Si',
-                          cancelBtnText: 'No',
-                          barrierDismissible: true,
-                          confirmBtnColor: Colors.green,
-                          onConfirmBtnTap: () {
-                            Navigator.pop(context);
-                            QuickAlert.show(
-                              context: context,
-                              type: QuickAlertType.success,
-                              text: 'Se ha eliminado exitosamente la reserva!',
-                            );
-                            print("object");
-                          });
-                    },
-                    icon: Icon(FontAwesomeIcons.trash)),
-              ],
+            trailing: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 18.0),
+              child: Text(
+                reserva!["cloud"] + "%",
+                style: TextStyle(fontSize: size.width * 0.04),
+              ),
             )),
         height: size.height * 0.14,
         decoration: BoxDecoration(

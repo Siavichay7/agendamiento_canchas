@@ -1,8 +1,10 @@
+import 'package:agendamiento_canchas/config/services/weather_service.dart';
 import 'package:agendamiento_canchas/presentation/providers/reserva_providers.dart';
 import 'package:agendamiento_canchas/presentation/screens/home/widgets/reserva_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:omni_datetime_picker/omni_datetime_picker.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
@@ -12,7 +14,11 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reservaProvider = ref.watch(revervasListProvider.notifier).getList();
+    var reservaProvider = ref.watch(revervasListProvider);
+    if (reservaProvider.length == 0) {
+      reservaProvider = ref.watch(revervasListProvider.notifier).getList();
+    }
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
         appBar: AppBar(
@@ -29,8 +35,10 @@ class HomeScreen extends ConsumerWidget {
                 ref.watch(revervasListProvider.notifier).dateController;
             final usernameController =
                 ref.watch(revervasListProvider.notifier).username;
-            final list = ref.watch(canchaListProvider);
-            final cancha = ref.watch(nombreCanchaProvider);
+            var list = ref.watch(canchaListProvider);
+
+            var cancha = ref.read(nombreCanchaProvider);
+            cancha = list.first;
             print("CANCHA: $cancha");
             QuickAlert.show(
               context: context,
@@ -39,14 +47,24 @@ class HomeScreen extends ConsumerWidget {
               confirmBtnText: 'Guardar',
               confirmBtnColor: Colors.green,
               customAsset: 'assets/images/tennis.jpeg',
-              widget: Column(
-                children: [
+              widget: Consumer(builder: (context, refe, child) {
+                return Column(children: [
                   TextFormField(
                     readOnly: true,
                     onTap: () async {
                       DateTime? dateTime =
                           await showOmniDateTimePicker(context: context);
                       dateController.text = dateTime.toString();
+                      // Convertir a objeto DateTime
+                      DateTime dateTime2 = DateTime.parse(dateTime.toString());
+
+                      // Formatear la fecha en el nuevo formato
+                      String fechaFormateada =
+                          DateFormat('yyyy-MM-dd').format(dateTime2);
+                      var cloud = getWeather(fechaFormateada);
+                      cloud.then((value) => refe
+                          .read(weatherProvider.notifier)
+                          .setWeather(value));
                     },
                     controller: dateController,
                     decoration: const InputDecoration(
@@ -59,6 +77,19 @@ class HomeScreen extends ConsumerWidget {
                     textInputAction: TextInputAction.next,
                     keyboardType: TextInputType.phone,
                     // onChanged: (value) => message = value,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Icon(FontAwesomeIcons.cloudRain),
+                        Text(
+                          refe.watch(weatherProvider) + '%',
+                          style: TextStyle(fontSize: size.width * 0.04),
+                        ),
+                      ],
+                    ),
                   ),
                   TextFormField(
                     controller: usernameController,
@@ -77,7 +108,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   DropdownButton<String>(
                     isExpanded: true,
-                    value: ref.watch(nombreCanchaProvider),
+                    value: refe.watch(nombreCanchaProvider),
                     icon: const Icon(Icons.arrow_downward),
                     elevation: 16,
                     style: const TextStyle(color: Colors.black),
@@ -87,9 +118,9 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     onChanged: (String? value) {
                       // This is called when the user selects an item.
-                      ref.read(nombreCanchaProvider.notifier).setNombre(value!);
-                      print(
-                          "ESTADO DE CANCHA: ${ref.watch(nombreCanchaProvider)}");
+                      refe
+                          .read(nombreCanchaProvider.notifier)
+                          .setNombre(value!);
                     },
                     items: list.map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
@@ -108,19 +139,25 @@ class HomeScreen extends ConsumerWidget {
                             ],
                           ));
                     }).toList(),
-                  ),
-                ],
-              ),
+                  )
+                ]);
+              }),
               onConfirmBtnTap: () async {
                 Navigator.pop(context);
                 final result =
-                    ref.watch(revervasListProvider.notifier).addReserva();
+                    ref.read(revervasListProvider.notifier).addReserva();
                 if (!!result) {
                   QuickAlert.show(
                     title: 'Éxito',
                     context: context,
                     type: QuickAlertType.success,
                     text: 'Reserva realizada!',
+                    onConfirmBtnTap: () {
+                      Navigator.pop(context);
+                      print("ss");
+                      print(
+                          ref.refresh(revervasListProvider.notifier).getList());
+                    },
                   );
                 } else {
                   QuickAlert.show(
@@ -128,7 +165,7 @@ class HomeScreen extends ConsumerWidget {
                     context: context,
                     type: QuickAlertType.warning,
                     text:
-                        'No se puede agregar más reservas para esta cancha en esta fecha',
+                        'No se puede agregar más reservas para esta cancha en esta fecha y los campos son obligatorios',
                   );
                 }
               },
@@ -144,11 +181,14 @@ class HomeScreen extends ConsumerWidget {
             color: Colors.white,
           ),
         ),
-        body: ListView.builder(
-          itemCount: reservaProvider.length,
-          itemBuilder: (BuildContext context, int index) {
-            return ReservaWidget(reserva: reservaProvider[index]);
-          },
+        body: RefreshIndicator(
+          onRefresh: () async => ref.refresh(revervasListProvider),
+          child: ListView.builder(
+            itemCount: reservaProvider.length,
+            itemBuilder: (BuildContext context, int index) {
+              return ReservaWidget(reserva: reservaProvider[index]);
+            },
+          ),
         ));
   }
 }

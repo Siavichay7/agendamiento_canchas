@@ -6,7 +6,7 @@ part of 'reserva_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$revervasListHash() => r'0cf8ff991ddf42478619507313f8ab9ce4073746';
+String _$revervasListHash() => r'b365b9b7af02ee9809cb4790e27a2de22507ed59';
 
 /// See also [RevervasList].
 @ProviderFor(RevervasList)
@@ -35,7 +35,7 @@ final canchaListProvider = NotifierProvider<CanchaList, List<String>>.internal(
 );
 
 typedef _$CanchaList = Notifier<List<String>>;
-String _$nombreCanchaHash() => r'd690fa8f66f200cfa1bc6aba0139ef56d769581b';
+String _$nombreCanchaHash() => r'6904e7f816c256ea887ca37070c5f7212dca9433';
 
 /// See also [NombreCancha].
 @ProviderFor(NombreCancha)
@@ -49,5 +49,19 @@ final nombreCanchaProvider = NotifierProvider<NombreCancha, String>.internal(
 );
 
 typedef _$NombreCancha = Notifier<String>;
+String _$weatherHash() => r'd6ead3e53b58a65639d086eb7e1008bb71f7a947';
+
+/// See also [Weather].
+@ProviderFor(Weather)
+final weatherProvider = NotifierProvider<Weather, String>.internal(
+  Weather.new,
+  name: r'weatherProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$weatherHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$Weather = Notifier<String>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
